@@ -440,6 +440,7 @@
             <th>ชื่อสินค้า</th>
             <th>รายละเอียด / หน่วย</th>
             <th>ราคาต่อหน่วย</th>
+            <th>สต๊อคคงเหลือ</th>
             <th>จำนวนที่สั่ง</th>
             <th>ราคารวม</th>
           </tr>
@@ -467,7 +468,7 @@
       <summary style="cursor:pointer;color:var(--green-dark);font-weight:600;font-size:13.5px;">⚙ ตั้งค่าการเชื่อมต่อ Google Sheet กลาง (ตั้งค่าครั้งเดียว)</summary>
       <div class="field" style="margin-top:10px;">
         <label for="gsheetUrl">Google Sheet Web App URL</label>
-        <input type="text" id="gsheetUrl" placeholder="https://script.google.com/macros/s/xxxx/exec" value="https://script.google.com/macros/s/AKfycbwzSedNrl3bEwLWQlsGdc9aoPWTL1o9rWTdrCEVUKDUtv8-RVs_sts0uaWNCuaiyIGeKA/exec">
+        <input type="text" id="gsheetUrl" placeholder="https://script.google.com/macros/s/xxxx/exec" value="https://script.google.com/macros/s/AKfycbwFwBhvI70vMIrqLvl57ddoplgyh10DiIoelrZyaKOWfaCxcUJwEKk7B0G3hpeZtDtKfQ/exec">
       </div>
     </details>
     <div class="summary-bar">
@@ -491,6 +492,11 @@
         <div class="label">ยอดสั่งซื้อรวมสุทธิ</div>
         <div class="value" id="sumGrandTotal">0 บาท</div>
       </div>
+    </div>
+
+    <div class="field" style="margin-bottom:14px;">
+      <label for="extraNote">📝 โน็ตเบิกรายการเพิ่มเติม (รายการที่ต้องการแต่ไม่อยู่ในลิสต์)</label>
+      <textarea id="extraNote" rows="3" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;background:var(--cream);color:var(--text-dark);resize:vertical;" placeholder="เช่น ขอเพิ่มถุงพลาสติกใส x 2 แพ็ก, น้ำดื่ม x 1 โหล..."></textarea>
     </div>
 
     <div class="actions">
@@ -538,18 +544,22 @@
       <tr>
         <th>ลำดับ</th>
         <th>รายการสินค้า</th>
-        <th>จำนวน</th>
+        <th>สต๊อคคงเหลือ</th>
+        <th>จำนวนสั่ง</th>
         <th>ราคาต่อหน่วย</th>
         <th>ราคารวม</th>
       </tr>
     </thead>
     <tbody id="p-tbody"></tbody>
     <tfoot>
-      <tr><td colspan="4">ยอดสินค้ารวม</td><td id="p-subtotal"></td></tr>
-      <tr><td colspan="4">ค่าจัดส่ง</td><td id="p-shipping"></td></tr>
-      <tr><td colspan="4">ยอดรวมสุทธิ</td><td id="p-grand-total"></td></tr>
+      <tr><td colspan="5">ยอดสินค้ารวม</td><td id="p-subtotal"></td></tr>
+      <tr><td colspan="5">ค่าจัดส่ง</td><td id="p-shipping"></td></tr>
+      <tr><td colspan="5">ยอดรวมสุทธิ</td><td id="p-grand-total"></td></tr>
     </tfoot>
   </table>
+  <div id="p-extra-note" style="display:none;margin-top:14px;padding:10px;border:1px solid #ccc;border-radius:6px;font-size:13px;">
+    <strong>📝 โน็ตเบิกรายการเพิ่มเติม:</strong><br><span id="p-extra-note-text"></span>
+  </div>
   <div class="doc-footnote">โปรดตรวจสอบรายการและจำนวนสินค้าก่อนยืนยันการสั่งซื้อ</div>
   <div class="doc-sign">
     <div>
@@ -594,8 +604,9 @@ const PRODUCTS = [
 const STORAGE_KEY = "niao_moo_sai_taek_stock_order_draft";
 
 let state = {
-  meta: { date:"", branch:"", orderer:"", note:"", shipping:0 },
-  qty: {} // id -> quantity
+  meta: { date:"", branch:"", orderer:"", note:"", shipping:0, extraNote:"" },
+  qty: {},   // id -> quantity
+  stock: {}  // id -> stock remaining
 };
 
 function fmtMoney(n){
@@ -613,6 +624,16 @@ function setQty(id, val){
   state.qty[id] = val;
   renderRowTotal(id);
   renderSummary();
+}
+
+function getStock(id){
+  const v = state.stock[id];
+  return (v !== undefined && v !== null && v !== '') ? v : '';
+}
+
+function setStock(id, val){
+  val = val === '' ? '' : Math.max(0, Math.floor(Number(val) || 0));
+  state.stock[id] = val;
 }
 
 function renderRowTotal(id){
@@ -654,6 +675,12 @@ function buildTable(){
       <td class="unit-detail">${p.detail}</td>
       <td>${fmtMoney(p.price)}</td>
       <td>
+        <input type="number" min="0" class="stock-input" id="stock-${p.id}"
+          value="${getStock(p.id)}" data-id="${p.id}"
+          style="width:64px;text-align:center;padding:5px 2px;border:1px solid var(--border);border-radius:6px;font-size:14px;"
+          placeholder="0">
+      </td>
+      <td>
         <div class="qty-control">
           <button type="button" aria-label="ลดจำนวน" data-action="dec" data-id="${p.id}">−</button>
           <input type="number" min="0" id="qty-${p.id}" value="${qty}" data-id="${p.id}">
@@ -666,7 +693,7 @@ function buildTable(){
   });
 
   if(shown === 0){
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-note">ไม่พบสินค้าที่ค้นหา</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-note">ไม่พบสินค้าที่ค้นหา</td></tr>';
   }
 
   // attach events
@@ -678,10 +705,16 @@ function buildTable(){
       else setQty(id, Math.max(0, cur-1));
     });
   });
-  tbody.querySelectorAll('input[type="number"]').forEach(inp=>{
+  tbody.querySelectorAll('input[type="number"]:not(.stock-input)').forEach(inp=>{
     inp.addEventListener('input', ()=>{
       const id = Number(inp.dataset.id);
       setQty(id, inp.value);
+    });
+  });
+  tbody.querySelectorAll('.stock-input').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      const id = Number(inp.dataset.id);
+      setStock(id, inp.value);
     });
   });
 }
@@ -743,6 +776,7 @@ function collectMeta(){
   state.meta.branch = document.getElementById('branchName').value;
   state.meta.orderer = document.getElementById('ordererName').value;
   state.meta.note = document.getElementById('orderNote').value;
+  state.meta.extraNote = document.getElementById('extraNote').value;
 }
 
 function applyMetaToFields(){
@@ -750,6 +784,7 @@ function applyMetaToFields(){
   document.getElementById('branchName').value = state.meta.branch || '';
   document.getElementById('ordererName').value = state.meta.orderer || '';
   document.getElementById('orderNote').value = state.meta.note || '';
+  document.getElementById('extraNote').value = state.meta.extraNote || '';
 }
 
 function formatDateTH(dateStr){
@@ -763,7 +798,8 @@ function formatDateTH(dateStr){
 document.getElementById('btnClear').addEventListener('click', ()=>{
   if(!confirm('ต้องการล้างข้อมูลทั้งหมดใช่หรือไม่?')) return;
   state.qty = {};
-  state.meta = { date:'', branch:'', orderer:'', note:'', shipping:0 };
+  state.stock = {};
+  state.meta = { date:'', branch:'', orderer:'', note:'', shipping:0, extraNote:'' };
   applyMetaToFields();
   buildTable();
   renderSummary();
@@ -798,10 +834,12 @@ document.getElementById('btnSummary').addEventListener('click', ()=>{
     let rowsHtml = rows.map((p, i)=>{
       const qty = getQty(p.id);
       const total = qty * p.price;
+      const stock = getStock(p.id);
       grandTotal += total;
       return `<tr>
         <td>${i+1}</td>
         <td>${p.name}</td>
+        <td style="text-align:center">${stock !== '' ? stock : '-'}</td>
         <td style="text-align:center">${qty}</td>
         <td style="text-align:right">${fmtMoney(p.price)}</td>
         <td style="text-align:right">${fmtMoney(total)}</td>
@@ -820,13 +858,15 @@ document.getElementById('btnSummary').addEventListener('click', ()=>{
           <tr style="background:var(--green-soft);">
             <th style="padding:7px 6px;text-align:left;">ลำดับ</th>
             <th style="padding:7px 6px;text-align:left;">รายการสินค้า</th>
-            <th style="padding:7px 6px;">จำนวน</th>
+            <th style="padding:7px 6px;">สต๊อคคงเหลือ</th>
+            <th style="padding:7px 6px;">จำนวนสั่ง</th>
             <th style="padding:7px 6px;text-align:right;">ราคาต่อหน่วย</th>
             <th style="padding:7px 6px;text-align:right;">ราคารวม</th>
           </tr>
         </thead>
         <tbody>${rowsHtml}</tbody>
       </table>
+      ${state.meta.extraNote ? `<div style="margin-top:12px;padding:10px 12px;background:var(--cream-deep);border-radius:8px;border:1px solid var(--border);font-size:13.5px;"><strong>📝 โน็ตเบิกรายการเพิ่มเติม:</strong><br>${state.meta.extraNote.replace(/\n/g,'<br>')}</div>` : ''}
       <div style="text-align:right;margin-top:12px;font-size:14px;color:var(--text-mute);">
         ยอดสินค้ารวม: ${fmtMoney(grandTotal)}<br>
         ค่าจัดส่ง: ${state.meta.shipping === 0 ? "จัดส่งฟรี 🎉" : fmtMoney(state.meta.shipping)}
@@ -854,20 +894,30 @@ function preparePrintSheet(){
   let grandTotal = 0;
   const tbody = document.getElementById('p-tbody');
   if(rows.length === 0){
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">ไม่มีรายการสินค้าที่สั่ง</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">ไม่มีรายการสินค้าที่สั่ง</td></tr>';
   } else {
     tbody.innerHTML = rows.map((p,i)=>{
       const qty = getQty(p.id);
       const total = qty * p.price;
+      const stock = getStock(p.id);
       grandTotal += total;
       return `<tr>
         <td>${i+1}</td>
         <td>${p.name} (${p.detail})</td>
+        <td style="text-align:center">${stock !== '' ? stock : '-'}</td>
         <td style="text-align:center">${qty}</td>
         <td style="text-align:right">${fmtMoney(p.price)}</td>
         <td style="text-align:right">${fmtMoney(total)}</td>
       </tr>`;
     }).join('');
+  }
+  const extraNote = state.meta.extraNote || '';
+  const extraEl = document.getElementById('p-extra-note');
+  if(extraNote){
+    extraEl.style.display = 'block';
+    document.getElementById('p-extra-note-text').textContent = extraNote;
+  } else {
+    extraEl.style.display = 'none';
   }
   document.getElementById('p-subtotal').textContent = fmtMoney(grandTotal);
   const shipping = state.meta.shipping || 0;
@@ -899,16 +949,20 @@ document.getElementById('btnCSV').addEventListener('click', ()=>{
   csv += `สาขา,${state.meta.branch || '-'}\n`;
   csv += `ผู้สั่ง,${state.meta.orderer || '-'}\n`;
   csv += `หมายเหตุ,${(state.meta.note || '-').replace(/,/g,' ')}\n\n`;
-  csv += `ลำดับ,ชื่อสินค้า,รายละเอียด/หน่วย,ราคาต่อหน่วย,จำนวนที่สั่ง,ราคารวม\n`;
+  csv += `ลำดับ,ชื่อสินค้า,รายละเอียด/หน่วย,ราคาต่อหน่วย,สต๊อคคงเหลือ,จำนวนที่สั่ง,ราคารวม\n`;
   rows.forEach((p,i)=>{
     const qty = getQty(p.id);
     const total = qty * p.price;
+    const stock = getStock(p.id);
     grandTotal += total;
-    csv += `${i+1},${p.name},${p.detail},${p.price},${qty},${total}\n`;
+    csv += `${i+1},${p.name},${p.detail},${p.price},${stock !== '' ? stock : '-'},${qty},${total}\n`;
   });
-  csv += `\n,,,,ยอดสินค้ารวม,${grandTotal}\n`;
-  csv += `,,,,ค่าจัดส่ง,${state.meta.shipping || 0}\n`;
-  csv += `,,,,ยอดรวมสุทธิ,${grandTotal + (state.meta.shipping || 0)}\n`;
+  csv += `\n,,,,,ยอดสินค้ารวม,${grandTotal}\n`;
+  csv += `,,,,, ค่าจัดส่ง,${state.meta.shipping || 0}\n`;
+  csv += `,,,,,ยอดรวมสุทธิ,${grandTotal + (state.meta.shipping || 0)}\n`;
+  if(state.meta.extraNote){
+    csv += `\nโน็ตเบิกรายการเพิ่มเติม,"${(state.meta.extraNote||'').replace(/"/g,'""')}"\n`;
+  }
 
   const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -954,12 +1008,14 @@ document.getElementById('btnSubmitSheet').addEventListener('click', async ()=>{
     branch: state.meta.branch,
     orderer: state.meta.orderer,
     note: state.meta.note,
+    extraNote: state.meta.extraNote || '',
     shipping: shipping,
     grandTotal: subtotal + shipping,
     items: rows.map(p => ({
       name: p.name,
       detail: p.detail,
       price: p.price,
+      stock: getStock(p.id),
       qty: getQty(p.id),
       total: getQty(p.id) * p.price
     }))
@@ -1019,7 +1075,7 @@ function init(){
   renderSummary();
 
   // persist meta changes live (not auto-saved to storage, only kept in memory until "บันทึกแบบร่าง")
-  ['orderDate','branchName','ordererName','orderNote'].forEach(id=>{
+  ['orderDate','branchName','ordererName','orderNote','extraNote'].forEach(id=>{
     document.getElementById(id).addEventListener('input', collectMeta);
   });
 }
