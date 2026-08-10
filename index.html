@@ -462,7 +462,7 @@
         font-size:13px;
         color:var(--green-dark);
         font-weight:600;
-      ">🚚 จัดส่งฟรี เมื่อมียอด 5,000 บาทขึ้นไปต่อการสั่งซื้อ (ต่ำกว่า 5,000 บาท คิดค่าจัดส่ง 250 บาท)</div>
+      ">🚚 จัดส่งฟรี เมื่อมียอด 8,000 บาทขึ้นไปต่อการสั่งซื้อ (ต่ำกว่า 8,000 บาท คิดค่าจัดส่ง 220 บาท)</div>
     </div>
     <details style="margin-bottom:14px;">
       <summary style="cursor:pointer;color:var(--green-dark);font-weight:600;font-size:13.5px;">⚙ ตั้งค่าการเชื่อมต่อ Google Sheet กลาง (ตั้งค่าครั้งเดียว)</summary>
@@ -586,6 +586,7 @@ const PRODUCTS = [
   {id:11, name:"ไก่ไส้แตก (แช่แข็ง ถุงละ 1 กก.)", detail:"1 ถุง 1 กก.", price:130, cat:"ไก่"},
   {id:12, name:"น้ำพริกปลาย่าง 60 กรัม", detail:"1 กระปุก", price:15, cat:"วัตถุดิบ"},
   {id:13, name:"น้ำพริกปลาร้าผัดสุก 60 กรัม", detail:"1 กระปุก", price:15, cat:"วัตถุดิบ"},
+  {id:27, name:"น้ำพริกหมูฝอย 20 กรัม", detail:"1 กระปุก", price:15, cat:"วัตถุดิบ"},
   {id:14, name:"ใบตอง", detail:"1 มัด 10 กก.", price:220, cat:"วัตถุดิบ"},
   {id:15, name:"ข้าวสารถังเล็ก 15 กก.", detail:"1 ถุง 15 กก.", price:450, cat:"วัตถุดิบ"},
   {id:16, name:"ข้าวสารกระสอบใหญ่ 45 กก.", detail:"45 กก.", price:1250, cat:"วัตถุดิบ"},
@@ -719,8 +720,8 @@ function buildTable(){
   });
 }
 
-const FREE_SHIPPING_THRESHOLD = 5000;
-const SHIPPING_FEE = 250;
+const FREE_SHIPPING_THRESHOLD = 8000;
+const SHIPPING_FEE = 220;
 
 function calcShipping(subtotal){
   return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
@@ -756,8 +757,8 @@ function renderSummary(){
   } else {
     const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
     noteEl.textContent = subtotal > 0
-      ? `🚚 จัดส่งฟรี เมื่อมียอด 5,000 บาทขึ้นไปต่อการสั่งซื้อ (อีก ${fmtMoney(remaining)} ถึงเกณฑ์จัดส่งฟรี ไม่ถึงเกณฑ์คิดค่าจัดส่ง 250 บาท)`
-      : "🚚 จัดส่งฟรี เมื่อมียอด 5,000 บาทขึ้นไปต่อการสั่งซื้อ (ต่ำกว่า 5,000 บาท คิดค่าจัดส่ง 250 บาท)";
+      ? `🚚 จัดส่งฟรี เมื่อมียอด 8,000 บาทขึ้นไปต่อการสั่งซื้อ (อีก ${fmtMoney(remaining)} ถึงเกณฑ์จัดส่งฟรี ไม่ถึงเกณฑ์คิดค่าจัดส่ง 220 บาท)`
+      : "🚚 จัดส่งฟรี เมื่อมียอด 8,000 บาทขึ้นไปต่อการสั่งซื้อ (ต่ำกว่า 8,000 บาท คิดค่าจัดส่ง 220 บาท)";
     noteEl.style.background = "var(--green-soft)";
     noteEl.style.borderColor = "var(--green-leaf)";
     noteEl.style.color = "var(--green-dark)";
