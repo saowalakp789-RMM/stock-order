@@ -452,6 +452,11 @@
 
   <div class="card">
     <h2>สรุปยอด</h2>
+    <div style="background:#c0392b;color:#fff;border-radius:10px;padding:14px 18px;margin-bottom:16px;font-size:13.5px;line-height:1.8;border-left:6px solid #7b241c;">
+      ⚠️ <strong>วันส่งของ</strong> — กรุณาตรวจสอบวัตถุดิบที่จัดส่งให้เรียบร้อย ณ วันรับของ<br>
+      หากสินค้าไม่ได้มาตรฐานให้ตีกลับทันที<br>
+      <span style="font-size:13px;opacity:.92;">ทางร้านไม่รับเคลม / คืน / เปลี่ยนสินค้าทุกกรณี หลังจากมีการตรวจรับไปแล้ว</span>
+    </div>
     <div class="field" style="max-width:420px;margin-bottom:14px;">
       <label>ค่าจัดส่ง</label>
       <div id="shippingNote" style="
@@ -574,12 +579,12 @@
 <script>
 const PRODUCTS = [
   {id:1, name:"หมูทอด (แช่แข็ง ถุงละ 2กก.)", detail:"1 ถุง (2กก./ถุง)", price:320, cat:"หมู"},
-  {id:2, name:"หมูไส้แตก (แช่แข็ง ถุงละ 2กก.)", detail:"1 ถุง (2กก./ถุง)", price:320, cat:"หมู"},
+  {id:2, name:"หมูไส้แตก (แช่แข็ง ถุงละ 2กก.)", detail:"1 ถุง (2กก./ถุง)", price:340, cat:"หมู"},
   {id:3, name:"หมูคลุกฝุ่น (แช่แข็ง ถุงละ 2กก.)", detail:"1 ถุง (2กก./ถุง)", price:360, cat:"หมู"},
-  {id:4, name:"หมูฝอย (สำเร็จพร้อมขาย)", detail:"1 ถุง 1 กก.", price:420, cat:"หมู"},
+  {id:4, name:"หมูฝอยแบบนิ่ม (สำเร็จพร้อมขาย)", detail:"1 ถุง 1 กก.", price:420, cat:"หมู"},
   {id:5, name:"หมูหวาน (สำเร็จพร้อมขาย)", detail:"1 ถุง 1 กก.", price:420, cat:"หมู"},
   {id:6, name:"หมูเค็ม (สำเร็จพร้อมขาย)", detail:"1 ถุง 1 กก.", price:450, cat:"หมู"},
-  {id:7, name:"หมูสามชั้น (แช่แข็ง ถุงละ 2กก.)", detail:"1 ถุง (2กก./ถุง)", price:320, cat:"หมู"},
+  {id:7, name:"หมูสามชั้น (แช่แข็ง ถุงละ 2กก.)", detail:"1 ถุง (2กก./ถุง)", price:340, cat:"หมู"},
   {id:8, name:"ไก่ฝอย (สำเร็จพร้อมขาย)", detail:"1 ถุง 1 กก.", price:400, cat:"ไก่"},
   {id:9, name:"สะโพกไก่ทอด (แช่แข็ง ถุงละ 1 กก.)", detail:"1 ถุง 1 กก.", price:140, cat:"ไก่"},
   {id:10, name:"ปีกไก่ทอด (แช่แข็ง ถุงละ 1 กก.)", detail:"1 ถุง 1 กก.", price:130, cat:"ไก่"},
@@ -597,6 +602,7 @@ const PRODUCTS = [
   {id:21, name:"ส้อมไม้", detail:"1 แพ็ก 100 ชิ้น", price:50, cat:"บรรจุภัณฑ์"},
   {id:22, name:"กระดาษรอง", detail:"1 เซต 500 แผ่น", price:130, cat:"บรรจุภัณฑ์"},
   {id:23, name:"ตองเทียม (กระดาษห่อข้าว)", detail:"1 มัด 1000 แผ่น", price:1200, cat:"บรรจุภัณฑ์"},
+  {id:29, name:"กระติ๊บพร้อมสายคาด", detail:"1 ใบ", price:18, cat:"บรรจุภัณฑ์"},
   {id:24, name:"สติกเกอร์ Logo", detail:"1 แผ่น", price:30, cat:"บรรจุภัณฑ์"},
   {id:25, name:"กล่องกระดาษ Brand 500 ml", detail:"1 แพ็ก 50 ใบ", price:250, cat:"บรรจุภัณฑ์"},
   {id:26, name:"กล่อง SnackBox Brand 1200 ml", detail:"1 แพ็ก 50 ใบ", price:400, cat:"บรรจุภัณฑ์"},
